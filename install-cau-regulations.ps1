@@ -76,11 +76,43 @@ BijQlxy5UMTO3wnqdPe47q3Ivcxzca56vwzTKDct8KvwcV+nl/pv4U90YIr+Hyf/AMmpYPlrBAAA
 }
 
 Step '1/6 Node.js'
-$nodeCmd = Get-Command node -ErrorAction SilentlyContinue
-if (-not $nodeCmd) { throw 'Node.js not found. Install LTS from https://nodejs.org and run again.' }
-$node = $nodeCmd.Source
+function Find-Node {
+    $c = Get-Command node -ErrorAction SilentlyContinue
+    if ($c) { return $c.Source }
+    foreach ($p in @("$env:ProgramFiles\nodejs\node.exe", "$env:LOCALAPPDATA\cau-regulations-node\node.exe")) { if (Test-Path $p) { return $p } }
+    return $null
+}
+function Get-NodeMajor($p) { try { return [int]((& $p -v).Trim().TrimStart('v').Split('.')[0]) } catch { return 0 } }
+$node = Find-Node
+if (-not $node -or (Get-NodeMajor $node) -lt 18) {
+    Warn 'Node.js 18+ not found. Installing Node.js LTS automatically...'
+    if (Get-Command winget -ErrorAction SilentlyContinue) {
+        winget install --id OpenJS.NodeJS.LTS -e --silent --accept-package-agreements --accept-source-agreements
+        $env:Path = [Environment]::GetEnvironmentVariable('Path', 'Machine') + ';' + [Environment]::GetEnvironmentVariable('Path', 'User')
+        $node = Find-Node
+    }
+    if (-not $node -or (Get-NodeMajor $node) -lt 18) {
+        Warn 'winget unavailable or failed. Installing portable Node.js for this user (no admin rights needed)...'
+        [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+        $ProgressPreference = 'SilentlyContinue'
+        $lts = (Invoke-RestMethod -Uri 'https://nodejs.org/dist/index.json' -UseBasicParsing | Where-Object { $_.lts } | Select-Object -First 1).version
+        $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
+        $zipName = "node-$lts-win-$arch"
+        $zipPath = Join-Path $env:TEMP "$zipName.zip"
+        $unpack = Join-Path $env:TEMP "cau-node-$stamp"
+        $portable = Join-Path $env:LOCALAPPDATA 'cau-regulations-node'
+        Invoke-WebRequest -Uri "https://nodejs.org/dist/$lts/$zipName.zip" -OutFile $zipPath -UseBasicParsing
+        Expand-Archive -Path $zipPath -DestinationPath $unpack
+        if (Test-Path $portable) { Remove-Item $portable -Recurse -Force }
+        Move-Item -Path (Join-Path $unpack $zipName) -Destination $portable
+        Remove-Item $zipPath, $unpack -Recurse -Force -ErrorAction SilentlyContinue
+        $node = Join-Path $portable 'node.exe'
+    }
+    if (-not $node -or -not (Test-Path $node) -or (Get-NodeMajor $node) -lt 18) {
+        throw 'Automatic Node.js install failed. Install LTS from https://nodejs.org and run again.'
+    }
+}
 $ver = (& $node -v).Trim()
-if ([int]($ver.TrimStart('v').Split('.')[0]) -lt 18) { throw "Node.js $ver found; 18 or later is required." }
 Ok "$ver ($node)"
 
 Step '2/6 Install files'
