@@ -3,7 +3,7 @@
 # registers in Claude Desktop, Claude Code and Codex (if present). Backs up configs.
 # Run on campus network or school VPN:
 #   powershell -ExecutionPolicy Bypass -File install-cau-regulations.ps1
-# Package: 2026-11-16 package, bridge sha256 8224d8431afb..., cert expires 2029-02-13 (CA:FALSE)
+# Package: 2026-11-16 package, bridge sha256 8224d8431afb..., cert expires 2029-02-13 (CA:FALSE), portable Node.js v26.13.1 pinned by SHA-256
 # Also trusts the server certificate for this Windows user so Chrome/Edge open
 # https://165.194.61.71:8445/ without a warning (Windows asks once; click Yes).
 
@@ -99,13 +99,25 @@ if (-not $node -or (Get-NodeMajor $node) -lt 18) {
         Warn 'winget unavailable or failed. Installing portable Node.js for this user (no admin rights needed)...'
         [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
         $ProgressPreference = 'SilentlyContinue'
-        $lts = (Invoke-RestMethod -Uri 'https://nodejs.org/dist/index.json' -UseBasicParsing | Where-Object { $_.lts } | Select-Object -First 1).version
+        # Pinned version and SHA-256 (nodejs.org SHASUMS256.txt, cross-checked with a mirror
+        # and a test download on 2026-11-16). A download that does not match is not used.
+        $lts = 'v26.13.1'
+        $nodeSha256 = @{
+            'x64'   = 'e2edda75bfb089654705cf65a13b58933bfd5f57148e8ebda916f58a2474f1f7'
+            'arm64' = '181ebe431b90787113a9e4fc80d38ce86d37888a353a0386de44d2872e48cb97'
+        }
         $arch = if ($env:PROCESSOR_ARCHITECTURE -eq 'ARM64') { 'arm64' } else { 'x64' }
         $zipName = "node-$lts-win-$arch"
         $zipPath = Join-Path $env:TEMP "$zipName.zip"
         $unpack = Join-Path $env:TEMP "cau-node-$stamp"
         $portable = Join-Path $env:LOCALAPPDATA 'cau-regulations-node'
         Invoke-WebRequest -Uri "https://nodejs.org/dist/$lts/$zipName.zip" -OutFile $zipPath -UseBasicParsing
+        $got = (Get-FileHash -Path $zipPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($got -ne $nodeSha256[$arch]) {
+            Remove-Item $zipPath -Force -ErrorAction SilentlyContinue
+            throw "Node.js download failed its SHA-256 check (got $got). Nothing was installed. Install LTS from https://nodejs.org and run again."
+        }
+        Ok "Node.js $lts download verified (SHA-256)"
         Expand-Archive -Path $zipPath -DestinationPath $unpack
         if (Test-Path $portable) { Remove-Item $portable -Recurse -Force }
         Move-Item -Path (Join-Path $unpack $zipName) -Destination $portable
