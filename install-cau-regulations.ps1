@@ -3,7 +3,9 @@
 # registers in Claude Desktop, Claude Code and Codex (if present). Backs up configs.
 # Run on campus network or school VPN:
 #   powershell -ExecutionPolicy Bypass -File install-cau-regulations.ps1
-# Package: 2026-11-13 package, bridge sha256 8224d8431afb..., cert expires 2027-02-11
+# Package: 2026-11-16 package, bridge sha256 8224d8431afb..., cert expires 2029-02-13 (CA:FALSE)
+# Also trusts the server certificate for this Windows user so Chrome/Edge open
+# https://165.194.61.71:8445/ without a warning (Windows asks once; click Yes).
 
 $ErrorActionPreference = 'Stop'
 $dest  = Join-Path $env:USERPROFILE 'cau-regulations-client'
@@ -60,22 +62,24 @@ H4sIAAAAAAAC/6vmUlBQKi3KUbJSUMooKSkottLXNzQz1TO0NNEzM9QzN7SyMDEx1c9NLlDSASktKE3K
 bTlAAAAA
 '@
 'server-cert.pem' = @'
-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
+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
+Tqb9BAAA
 '@
 }
 
-Step '1/6 Node.js'
+Step '1/7 Node.js'
 function Find-Node {
     $c = Get-Command node -ErrorAction SilentlyContinue
     if ($c) { return $c.Source }
@@ -115,7 +119,7 @@ if (-not $node -or (Get-NodeMajor $node) -lt 18) {
 $ver = (& $node -v).Trim()
 Ok "$ver ($node)"
 
-Step '2/6 Install files'
+Step '2/7 Install files'
 if (Test-Path $dest) {
     Rename-Item -Path $dest -NewName "cau-regulations-client.bak-$stamp"
     Ok "Old folder backed up: $dest.bak-$stamp"
@@ -131,16 +135,38 @@ foreach ($name in $payload.Keys) {
 }
 Ok "Installed to $dest"
 
-Step '3/6 Connection test (--check)'
+Step '3/7 Connection test (--check)'
 $bridge = Join-Path $dest 'cau-regulations-bridge.js'
 & $node $bridge --check
 if ($LASTEXITCODE -ne 0) { throw 'Connection test failed. Check campus network/VPN (see README troubleshooting table).' }
+
+Step '4/7 Browser certificate (Chrome/Edge)'
+# Trust only this server's certificate (CA:FALSE: it cannot vouch for other sites).
+# Windows shows a security prompt once; answer Yes. Saying No only keeps the browser warning.
+try {
+    $certPath = Join-Path $dest 'server-cert.pem'
+    $newCert = New-Object System.Security.Cryptography.X509Certificates.X509Certificate2(,[IO.File]::ReadAllBytes($certPath))
+    $store = New-Object System.Security.Cryptography.X509Certificates.X509Store('Root', 'CurrentUser')
+    $store.Open('ReadWrite')
+    $old = @($store.Certificates | Where-Object { $_.Subject -like 'CN=165.194.61.71*' -and $_.Thumbprint -ne $newCert.Thumbprint })
+    foreach ($c in $old) { $store.Remove($c); Ok "Removed old server certificate $($c.Thumbprint.Substring(0,8))..." }
+    if (@($store.Certificates | Where-Object { $_.Thumbprint -eq $newCert.Thumbprint }).Count -gt 0) {
+        Ok 'Already trusted'
+    } else {
+        $store.Add($newCert)
+        Ok 'Trusted for this user. Restart Chrome/Edge, then open https://165.194.61.71:8445/'
+    }
+    $store.Close()
+} catch {
+    Warn 'Certificate not trusted (prompt declined or blocked). MCP still works; the browser keeps showing a warning.'
+    Warn 'To open the page anyway: Advanced > Continue to 165.194.61.71 (unsafe).'
+}
 
 $nodeFwd   = $node -replace '\\', '/'
 $bridgeFwd = $bridge -replace '\\', '/'
 $utf8 = New-Object System.Text.UTF8Encoding($false)
 
-Step '4/6 Claude Desktop'
+Step '5/7 Claude Desktop'
 $candidates = @(Join-Path $env:APPDATA 'Claude\claude_desktop_config.json')
 Get-ChildItem -Path (Join-Path $env:LOCALAPPDATA 'Packages') -Directory -Filter 'Claude_*' -ErrorAction SilentlyContinue |
     ForEach-Object { $candidates += (Join-Path $_.FullName 'LocalCache\Roaming\Claude\claude_desktop_config.json') }
@@ -163,14 +189,14 @@ foreach ($cfgPath in $targets) {
 
 $ErrorActionPreference = 'Continue'
 
-Step '5/6 Claude Code'
+Step '6/7 Claude Code'
 if (Get-Command claude -ErrorAction SilentlyContinue) {
     cmd /c "claude mcp remove --scope user cau-regulations >nul 2>&1"
     cmd /c "claude mcp add --scope user cau-regulations -- `"$nodeFwd`" `"$bridgeFwd`""
     if ($LASTEXITCODE -eq 0) { Ok 'Registered (user scope). Restart running Claude Code sessions.' } else { Warn 'Registration failed; see message above.' }
 } else { Ok 'Claude Code not installed - skipped' }
 
-Step '6/6 Codex'
+Step '7/7 Codex'
 $toml = Join-Path $env:USERPROFILE '.codex\config.toml'
 if (Test-Path $toml) {
     $text = [IO.File]::ReadAllText($toml)
